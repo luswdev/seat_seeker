@@ -35,6 +35,7 @@ class bot:
             await self.application.bot.send_photo(
                 chat_id=who,
                 photo=image,
+                caption=context,
                 parse_mode='MarkdownV2'
             )
         else:
