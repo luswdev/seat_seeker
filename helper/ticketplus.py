@@ -1,3 +1,4 @@
+import logging
 import re
 import yaml
 import requests
@@ -16,8 +17,10 @@ class tickets:
             self.area_url = config_content.get('api_url').get('area_url')
             self.ticket_url = config_content.get('event').get('url')
 
+            self.event_base_name = config_content.get('event').get('name')
+
         if self.event_url is None or self.session_url is None or self.area_url is None:
-            print('Error: Missing required URLs in the configuration file.')
+            logging.error('Error: Missing required URLs in the configuration file.')
             exit(1)
 
         self.event_name = ''
@@ -34,12 +37,12 @@ class tickets:
             for i, session in enumerate(sessions):
                 status = session.get('status')
                 date = session.get('saleEnd').split('T')[0]
-                print(f'{date}: {status}')
+                logging.info(f'[{self.event_name}] {date}: {status}')
                 if status != 'soldout' and status != 'unavailable':
                     await self.tgbot.send(self.channel, f'{date:8}: {status}')
 
         except requests.exceptions.RequestException as e:
-            print('fetching url failed: ', e)
+            logging.error('fetching url failed: ', e)
 
     async def fetchArea(self):
         try:
@@ -53,22 +56,23 @@ class tickets:
                 if type(count) != int:
                     count = 0
 
-                area = session.get('ticketAreaName')
+                area = self.escape_markdown(session.get('ticketAreaName'))
                 if count > 0 and self.remain_tickets.get(area, 0) != count:
-                    await self.tgbot.send(self.channel, f'[{self.event_name}]({self.ticket_url})\n**{area}**: {count}')
+                    await self.tgbot.send(self.channel, f'[{self.event_name_escape}]({self.ticket_url})\n**{area}**: {count}')
 
-                print(f'{area}: {count} (remain: {self.remain_tickets.get(area, 0)})')
+                logging.info(f'[{self.event_name}] {area}: {count} (remain: {self.remain_tickets.get(area, 0)})')
                 self.remain_tickets[area] = count
 
         except requests.exceptions.RequestException as e:
-            print('fetching url failed: ', e)
+            logging.error('fetching url failed: ', e)
 
     async def fetchEvent(self):
         try:
             response = requests.get(self.session_url)
             response.raise_for_status()
             data = response.json()
-            self.event_name = self.escape_markdown(data['sessions'][0]['name'])
+            self.event_name = data['sessions'][0]['name']
+            self.event_name_escape = self.escape_markdown(data['sessions'][0]['name'])
 
             response = requests.get(self.event_url)
             response.raise_for_status()
@@ -76,7 +80,7 @@ class tickets:
             self.cover = data['picSmallActiveMain']
 
         except requests.exceptions.RequestException as e:
-            print('fetching url failed: ', e)
+            logging.error('fetching url failed: ', e)
 
     def escape_markdown(self, text):
         escape_chars = r'\_*[]()~`>#+-=|{}.!'
