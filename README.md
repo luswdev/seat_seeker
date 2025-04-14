@@ -3,13 +3,13 @@
 ## Live Demo
 join the channel: [Seat Seeker](https://t.me/qwer_tks)
 
-## install guide
+## Install Guide
 0. setup python environment (see requirements.txt)
 1. setup d-bus policy for `com.luswdev.seatseeker`
 2. start main.py
 3. send d-bus command for configs setting
 
-## usage
+## Usage
 - config template (please goto [ticketplus](https://ticketplus.com.tw/) to craw more information)
 ```yaml
 event:
