@@ -1,13 +1,13 @@
 #!./venv/bin/python3
 
 import re
+import yaml
 import argparse
 import datetime
 import requests
 import asyncio
 
 import bot
-import yaml
 
 class tickets:
     def __init__(self, config, channel='@qwer_tks'):
@@ -60,8 +60,7 @@ class tickets:
 
                 area = session.get('ticketAreaName')
                 if count > 0 and self.remain_tickets.get(area, 0) != count:
-                    evt_name = self.escape_markdown(self.event_name)
-                    await self.tgbot.send(self.channel, f'[{evt_name}]({self.ticket_url})\n**{area}**: {count}')
+                    await self.tgbot.send(self.channel, f'[{self.event_name}]({self.ticket_url})\n**{area}**: {count}')
 
                 print(f'{area}: {count} (remain: {self.remain_tickets.get(area, 0)})')
                 self.remain_tickets[area] = count
@@ -74,7 +73,7 @@ class tickets:
             response = requests.get(self.session_url)
             response.raise_for_status()
             data = response.json()
-            self.event_name = data['sessions'][0]['name']
+            self.event_name = self.escape_markdown(data['sessions'][0]['name'])
 
             response = requests.get(self.event_url)
             response.raise_for_status()
@@ -93,8 +92,11 @@ async def main(channel, config, need_header, interval):
     await ticket_seeker.fetchEvent()
 
     if need_header:
-        await ticket_seeker.tgbot.send(ticket_seeker.channel, image=ticket_seeker.cover)
-        await ticket_seeker.tgbot.send(ticket_seeker.channel, context=f'start seek seet for event: \n```\n{ticket_seeker.event_name}\n```')
+        await ticket_seeker.tgbot.send(
+            ticket_seeker.channel,
+            image=ticket_seeker.cover,
+            context=f'start seek seet for event: \n[{ticket_seeker.event_name}]({ticket_seeker.ticket_url})\n'
+        )
 
     while True:
         print('\033c', end='')
@@ -109,9 +111,9 @@ async def main(channel, config, need_header, interval):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Seat Seeker script.')
-    parser.add_argument('-i', '--interval', type=int, default=10, help='Interval in seconds between checks.')
-    parser.add_argument('-H', '--header', type=bool, default=False, help='Send header imformation.')
-    parser.add_argument('-C', '--channel', type=str, default='@qwer_tks', help='Telegram channel to send messages.')
-    parser.add_argument('-f', '--file', type=str, required=True, help='Path to the configuration file.')
+    parser.add_argument('-i', '--interval', type=int, default=10,          help='Interval in seconds between checks.')
+    parser.add_argument('-C', '--channel',  type=str, default='@qwer_tks', help='Telegram channel to send messages.')
+    parser.add_argument('-f', '--file',     type=str, required=True,       help='Path to the configuration file.')
+    parser.add_argument('-H', '--header',   action='store_true',           help='Send header information.')
     args = parser.parse_args()
     asyncio.run(main(args.channel, args.file, args.header, args.interval))
