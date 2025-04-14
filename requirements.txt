@@ -1,11 +1,14 @@
 anyio==3.7.1
 certifi==2025.1.31
 charset-normalizer==3.4.1
+dbus-python==1.4.0
 exceptiongroup==1.2.2
 h11==0.14.0
 httpcore==0.17.3
 httpx==0.24.1
 idna==3.10
+pycairo==1.27.0
+PyGObject==3.50.0
 python-telegram-bot==20.3
 PyYAML==6.0.2
 requests==2.31.0
