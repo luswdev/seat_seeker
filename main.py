@@ -42,7 +42,7 @@ def init_dbus_service():
 
 async def main():
     logging.basicConfig(
-        format='%(asctime)s - %(levelname)s - %(message)s',
+        format='%(levelname)s - %(message)s',
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S'
     )
