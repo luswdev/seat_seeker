@@ -2,8 +2,10 @@
 
 import logging
 import asyncio
+import re
+import yaml
 
-from helper import ticketplus, dbus_service
+from helper import ticketplus, dbus_service, bot
 
 g_configs = []
 g_interval = 10
@@ -40,12 +42,19 @@ def init_dbus_service():
     service.connect('set-interval', set_interval_cb)
     return service
 
+def escape_markdown(text):
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    return re.sub(f'([{re.escape(escape_chars)}])', r'\\\1', text)
+
 async def main():
     logging.basicConfig(
         format='%(levelname)s - %(message)s',
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S'
     )
+
+    with open('env.yaml', 'r') as file:
+        tgbot = bot.bot(yaml.safe_load(file).get('bot').get('token'))
 
     service = init_dbus_service()
     loop = asyncio.get_event_loop()
@@ -59,18 +68,28 @@ async def main():
 
         for config in g_configs:
             if config['seeker'] is None:
-                seeker = ticketplus.tickets(config=config['config'], channel=config['channel'])
+                seeker = ticketplus.tickets(config=config['config'])
                 await seeker.fetchEvent()
                 if config['header']:
-                    await seeker.tgbot.send(
-                        seeker.channel,
+                    evt_name_escape = escape_markdown(seeker.event_name)
+                    await tgbot.send(
+                        config['channel'],
                         image=seeker.cover,
-                        context=f'start seek seat for event: \n[{seeker.event_name_escape}]({seeker.ticket_url})\n'
+                        context=f'start seek seat for event: \n[{evt_name_escape}]({seeker.ticket_url})\n'
                     )
 
                 config['seeker'] = seeker
 
-            await config['seeker'].fetchArea()
+            ret_area = config['seeker'].fetchArea()
+            if len(ret_area) > 0:
+                for area in ret_area:
+                    area_escape = escape_markdown(area['area'])
+                    evt_name_escape = escape_markdown(config['seeker'].event_name)
+
+                    await tgbot.send(
+                        config['channel'],
+                        context=f'[{evt_name_escape}]({config["seeker"].ticket_url})\n**{area_escape}**: {area["count"]}'
+                    )
 
         await asyncio.sleep(g_interval)
 
