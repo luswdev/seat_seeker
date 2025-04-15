@@ -34,18 +34,18 @@ class bot:
         try:
             if image != None:
                 await self.application.bot.send_photo(
-                    chat_id=who,
-                    photo=image,
-                    caption=context,
-                    parse_mode='MarkdownV2'
+                    chat_id    = who,
+                    photo      = image,
+                    caption    = context,
+                    parse_mode = 'MarkdownV2',
                 )
             else:
                 await self.application.bot.send_message(
-                    chat_id=who,
-                    text=context,
-                    disable_web_page_preview=True,
-                    parse_mode='MarkdownV2'
+                    chat_id                  = who,
+                    text                     = context,
+                    disable_web_page_preview = True,
+                    parse_mode               = 'MarkdownV2',
                 )
+
         except Exception as e:
             logging.error(f'sending message failed: {e}')
-

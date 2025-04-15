@@ -6,11 +6,10 @@ class tickets:
     def __init__(self, config):
         with open(config, 'r') as file:
             config_content = yaml.safe_load(file)
-            self.event_url = config_content.get('api_url').get('event_url')
-            self.session_url = config_content.get('api_url').get('session_url')
-            self.area_url = config_content.get('api_url').get('area_url')
-            self.ticket_url = config_content.get('event').get('url')
-
+            self.event_url       = config_content.get('api_url').get('event_url')
+            self.session_url     = config_content.get('api_url').get('session_url')
+            self.area_url        = config_content.get('api_url').get('area_url')
+            self.ticket_url      = config_content.get('event').get('url')
             self.event_base_name = config_content.get('event').get('name')
 
         if self.event_url is None or self.session_url is None or self.area_url is None:
@@ -20,7 +19,7 @@ class tickets:
         self.event_name = ''
         self.remain_tickets = { }
 
-    def fetchArea(self):
+    def fetch_area(self):
         ret_area = []
         try:
             response = requests.get(self.area_url)
@@ -48,7 +47,7 @@ class tickets:
 
         return ret_area
 
-    async def fetchEvent(self):
+    async def fetch_event(self):
         try:
             response = requests.get(self.session_url)
             response.raise_for_status()
