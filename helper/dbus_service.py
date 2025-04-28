@@ -12,6 +12,7 @@ class dbus_service(dbus.service.Object, GObject.Object, metaclass = combine_meta
         'add-config-signal': (GObject.SIGNAL_RUN_FIRST, None, (str, str, str, bool)),
         'del-config-signal': (GObject.SIGNAL_RUN_FIRST, None, (str,)),
         'set-interval':      (GObject.SIGNAL_RUN_FIRST, None, (int,)),
+        'announcement':      (GObject.SIGNAL_RUN_FIRST, None, (str, str)),
     }
 
     def __init__(self, object_path = '/com/luswdev/seatseeker'):
@@ -34,6 +35,11 @@ class dbus_service(dbus.service.Object, GObject.Object, metaclass = combine_meta
     @dbus.service.method('com.luswdev.seatseeker', in_signature = 'i', out_signature = 'i')
     def setInterval(self, interval):
         self.emit('set-interval', interval)
+        return 0
+
+    @dbus.service.method('com.luswdev.seatseeker', in_signature = 'ss', out_signature = 'i')
+    def announcement(self, announcement, channel):
+        self.emit('announcement', announcement, channel)
         return 0
 
     def start(self):

@@ -9,6 +9,7 @@ from helper import ticketplus, dbus_service, bot
 
 g_configs  = []
 g_interval = 10
+g_announce = None
 
 def add_config_cb(obj, config, tag, channel, header):
     global g_configs
@@ -37,11 +38,22 @@ def set_interval_cb(obj, interval):
 
     g_interval = interval
 
+def announcement_cb(obj, announcement, channel):
+    global g_announce
+    logging.info(f'announcement: {announcement} on channel: {channel}')
+
+    g_announce = {
+        'announcement': announcement,
+        'channel': channel,
+    }
+
+
 def init_dbus_service():
     service = dbus_service.dbus_service()
     service.connect('add-config-signal', add_config_cb)
     service.connect('del-config-signal', del_config_cb)
     service.connect('set-interval',      set_interval_cb)
+    service.connect('announcement',      announcement_cb)
     return service
 
 def escape_markdown(text):
@@ -49,6 +61,8 @@ def escape_markdown(text):
     return re.sub(f'([{re.escape(escape_chars)}])', r'\\\1', text)
 
 async def main():
+    global g_announce
+
     logging.basicConfig(
         format = '%(levelname)s - %(message)s',
         level  = logging.INFO,
@@ -62,6 +76,13 @@ async def main():
     loop.run_in_executor(None, service.start)
 
     while True:
+        if g_announce is not None:
+            await tgbot.send(
+                g_announce['channel'],
+                context = g_announce['announcement']
+            )
+            g_announce = None
+
         if len(g_configs) == 0:
             logging.info('waiting for config...')
             await asyncio.sleep(g_interval)
