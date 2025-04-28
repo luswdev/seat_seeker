@@ -79,7 +79,7 @@ async def main():
         if g_announce is not None:
             await tgbot.send(
                 g_announce['channel'],
-                context = g_announce['announcement']
+                context = escape_markdown(g_announce['announcement'])
             )
             g_announce = None
 
