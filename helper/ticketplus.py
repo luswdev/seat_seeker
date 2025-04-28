@@ -11,6 +11,7 @@ class tickets:
             self.area_url        = config_content.get('api_url').get('area_url')
             self.ticket_url      = config_content.get('event').get('url')
             self.event_base_name = config_content.get('event').get('name')
+            self.disabled        = config_content.get('disabled')
 
         if self.event_url is None or self.session_url is None or self.area_url is None:
             logging.error('Error: Missing required URLs in the configuration file.')
@@ -34,10 +35,11 @@ class tickets:
 
                 area = session.get('ticketAreaName')
                 if count > 0 and self.remain_tickets.get(area, 0) != count:
-                    ret_area.append({
-                            'area': area,
-                            'count': count,
-                        })
+                    if not any(sub in area for sub in self.disabled):
+                        ret_area.append({
+                                'area': area,
+                                'count': count,
+                            })
 
                 logging.info(f'[{self.event_name}] {area}: {count} (remain: {self.remain_tickets.get(area, 0)})')
                 self.remain_tickets[area] = count
